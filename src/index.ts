@@ -10,6 +10,7 @@ type Player = {
   name: string;
   bodyColor: string;
   edgeColor: string;
+  carroserie: string;
   nodes: Node[];
   votes: number[];
 };
@@ -17,21 +18,46 @@ type Player = {
 type GameState = {
   players: Map<string, Player>;
   timer: number;
+  theme: string;
 };
 
-const TIMER = 100;
+const themes: string[] = [
+  "Cirque",
+  "Maison",
+  "Chien",
+  "Chat",
+  "Arbre",
+  "Voiture",
+  "Fusée",
+  "Plage",
+  "Pirate",
+  "Château",
+  "Robot",
+  "Fleur",
+  "Poisson",
+  "Ferme",
+  "Dragon",
+  "Espace",
+  "Cheval",
+  "Magie",
+  "Pizza",
+  "Carnaval",
+];
+
+const TIMER = 200;
+
+function getTheme() {
+  return themes[Math.round(Math.random() * themes.length)] || "jsp";
+}
 
 const gameState: GameState = {
   players: new Map(),
   timer: TIMER,
+  theme: getTheme(),
 };
 
 setInterval(() => {
   gameState.timer -= 1;
-  if (gameState.timer < -(gameState.players.size * 20)) {
-    gameState.timer = TIMER;
-    gameState.players.clear();
-  }
 }, 1000);
 
 function getPlayerOrCreate(name: string) {
@@ -41,6 +67,7 @@ function getPlayerOrCreate(name: string) {
     name,
     bodyColor: "#000000",
     edgeColor: "#7b7bffff",
+    carroserie: "carroserie/Car_Basique",
     nodes: [],
     votes: [],
   };
@@ -58,6 +85,7 @@ const app = new Elysia()
         name,
         bodyColor: "#000000",
         edgeColor: "#7b7bffff",
+        carroserie: "carroserie/Car_Basique",
         nodes: [],
         votes: [],
       });
@@ -68,6 +96,11 @@ const app = new Elysia()
       }),
     }
   )
+  .put("/restart", () => {
+    gameState.timer = TIMER;
+    gameState.players = new Map();
+    gameState.theme = getTheme();
+  })
   .post(
     "/register-nodes",
     ({ body: { name, nodes } }) => {
@@ -96,6 +129,7 @@ const app = new Elysia()
       }),
     }
   )
+  .get("/theme", () => gameState.theme)
   .get("/get-timer", () => gameState.timer)
   .put("/reset-timer", () => (gameState.timer = 100))
   .get("/players", () => {
@@ -103,15 +137,17 @@ const app = new Elysia()
   })
   .post(
     "/set-color",
-    ({ body: { body, edge, name } }) => {
+    ({ body: { body, edge, name, carroserie } }) => {
       const player = getPlayerOrCreate(name);
       player.bodyColor = body;
       player.edgeColor = edge;
+      player.carroserie = carroserie;
     },
     {
       body: t.Object({
         body: t.String(),
         edge: t.String(),
+        carroserie: t.String(),
         name: t.String(),
       }),
     }
